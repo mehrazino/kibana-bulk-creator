@@ -109,9 +109,10 @@ if ($Help) {
     Write-Host "  10.0.0.2|core-router - cisco-ios - 10.0.0.2|CiscoRS"
     Write-Host "  10.0.0.3|fw-edge - fortigate - 10.0.0.3|Firewall,Edge"
     Write-Host ""
-    Write-Host "TROUBLESHOOTING:" -ForegroundColor Yellow
-    Write-Host "  Execution Policy error? Run once per session:"
-    Write-Host "    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass" -ForegroundColor Green
+    Write-Host "[SECURITY NOTICE]" -ForegroundColor Magenta
+    Write-Host "The provided URL, API Key, and Location are used strictly in-memory for this session." -ForegroundColor Gray
+    Write-Host "They are NOT saved to disk, logged, or sent to any third-party servers." -ForegroundColor Gray
+    Write-Host "Once this PowerShell window is closed, these credentials are forgotten." -ForegroundColor Gray
     Write-Host ""
     exit
 }
@@ -175,15 +176,6 @@ if ([string]::IsNullOrWhiteSpace($Location)) {
         exit
     }
 }
-
-# -----------------------------------------------------------------
-# Security Notice
-# -----------------------------------------------------------------
-Write-Host "`n[SECURITY NOTICE]" -ForegroundColor Magenta
-Write-Host "The provided URL, API Key, and Location are used strictly in-memory for this session." -ForegroundColor Gray
-Write-Host "They are NOT saved to disk, logged, or sent to any third-party servers." -ForegroundColor Gray
-Write-Host "Once this PowerShell window is closed, these credentials are forgotten." -ForegroundColor Gray
-Write-Host "---------------------------------------------------------`n" -ForegroundColor DarkGray
 
 # -----------------------------------------------------------------
 # SSL Certificate Handling (Version-Aware)
@@ -294,11 +286,31 @@ foreach ($monitor in $monitors) {
         Write-Host "SUCCESS" -ForegroundColor Green
     } catch {
         $errMsg = $_.Exception.Message
-        if ($errMsg -match "409" -or $errMsg -match "Conflict") {
+        $statusCode = $null
+        
+        # Attempt to extract HTTP status code
+        if ($_.Exception.Response) {
+            $statusCode = $_.Exception.Response.StatusCode.value__
+        }
+
+        if ($statusCode -eq 409 -or $errMsg -match "409" -or $errMsg -match "Conflict") {
             Write-Host "SKIPPED (Already exists)" -ForegroundColor Yellow
         } else {
             Write-Host "FAILED" -ForegroundColor Red
             Write-Host "      -> Error Details: $errMsg" -ForegroundColor DarkRed
+            
+            # Actionable advice based on specific errors
+            if ($statusCode -eq 401) {
+                Write-Host "      -> Suggestion: The API Key is invalid or expired. Please verify it." -ForegroundColor Yellow
+            } elseif ($statusCode -eq 403) {
+                Write-Host "      -> Suggestion: The API Key lacks required permissions (needs Synthetics write access)." -ForegroundColor Yellow
+            } elseif ($statusCode -eq 400) {
+                Write-Host "      -> Suggestion: Bad Request. Check if the Private Location name is correct and parameters are valid." -ForegroundColor Yellow
+            } elseif ($statusCode -eq 404) {
+                Write-Host "      -> Suggestion: Endpoint not found. Verify the Kibana URL and port." -ForegroundColor Yellow
+            } elseif (-not $statusCode) {
+                Write-Host "      -> Suggestion: Network issue. Ensure the Kibana URL is reachable and the server is running." -ForegroundColor Yellow
+            }
         }
     }
     
@@ -308,4 +320,4 @@ foreach ($monitor in $monitors) {
     Start-Sleep -Milliseconds 150
 }
 
-Write-Host "All tasks finished successfully!" -ForegroundColor Cyan
+Write-Host "All tasks finished!" -ForegroundColor Cyan
