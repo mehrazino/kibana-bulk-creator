@@ -4,18 +4,14 @@ A professional PowerShell script to bulk-create ICMP monitors in Kibana Syntheti
 
 Compatible with **Windows PowerShell 5.1** and **PowerShell 7+**.
 
----
-
 ## ✨ Features
 
 *   **Bulk Creation:** Add hundreds of ICMP monitors in seconds.
 *   **Fully Dynamic Configuration:** No hardcoded values. If the Kibana URL, API Key, or Private Location are not provided via switches, the script will securely prompt you for them.
 *   **Smart URL Handling:** Automatically fixes missing protocols (`https://`) and strips unnecessary paths if you paste a full Kibana dashboard URL.
-*   **Advanced Settings:** Supports custom schedules, timeouts, labels, namespaces, and multiple tags.
+*   **Advanced Configuration:** Supports custom schedules, timeouts, labels, namespaces, and multiple tags.
 *   **Safe & Secure:** Credentials are kept strictly in memory. Nothing is saved to disk or sent to third-party servers.
 *   **Detailed Logging:** Displays the exact settings for each monitor before creation and reports `SUCCESS`, `SKIPPED`, or `FAILED` clearly.
-
----
 
 ## 📋 Prerequisites
 
@@ -25,8 +21,6 @@ Before running the script, ensure you have:
 2.  **API Key:** A valid Kibana API Key with permissions to create Synthetics monitors. You can generate one from **Kibana → Stack Management → API Keys**.
 3.  **Private Location:** The name of your configured Private Location (e.g., `My-Datacenter`). You can find your locations under **Observability → Synthetics → Settings → Private Locations**.
 4.  **PowerShell:** Windows PowerShell 5.1 (built-in) or PowerShell 7+.
-
----
 
 ## 📥 Download
 
@@ -42,8 +36,6 @@ Alternatively, clone the entire repository:
 git clone https://github.com/mehrazino/kibana-bulk-creator.git
 ```
 
----
-
 ## 🚀 Quick Start
 
 ### Step 1: Create Your List File
@@ -57,12 +49,12 @@ IP|Name|Tag1,Tag2
 **Example:**
 
 ```text
-10.0.0.1|server-alpha - windows - 10.0.0.1|Windows
-10.0.0.2|core-router - cisco-ios - 10.0.0.2|CiscoRS
-10.0.0.3|fw-edge - fortigate - 10.0.0.3|Firewall,Edge
+192.168.1.10|server-01 - windows - 192.168.1.10|Windows
+192.168.1.1|core-router - cisco-ios - 192.168.1.1|CiscoRS
+192.168.1.50|fw-edge - fortigate - 192.168.1.50|Firewall,Edge
 ```
 
-> **Note:** Tags are optional. If you do not need tags, you can leave the third part empty (e.g., `10.0.0.5|linux-server - 10.0.0.5|`).
+> **Note:** Tags are optional. If you do not need tags, you can leave the third part empty (e.g., `192.168.1.5|linux-server - 192.168.1.5|`).
 
 ### Step 2: Open PowerShell in the Script Folder
 
@@ -99,8 +91,6 @@ You can also provide these upfront using the `-k`, `-a`, and `-l` switches to sk
 .\icmp-creator.ps1 -f .\my_targets.txt -k "https://kibana.example.com:5601" -a "your-api-key" -l "My-Datacenter"
 ```
 
----
-
 ## ⚙️ Script Parameters
 
 The script accepts the following optional parameters to fine-tune each monitor. If omitted, the default values (as defined by the Kibana API) are used.
@@ -128,8 +118,6 @@ The script accepts the following optional parameters to fine-tune each monitor. 
 
 This command creates monitors with a 5-minute schedule, a 30-second timeout, adds labels `env:prod` and `team:network`, and assigns them to the `My-Datacenter` location.
 
----
-
 ## 🛠️ Troubleshooting
 
 | Issue | Solution |
@@ -141,8 +129,6 @@ This command creates monitors with a 5-minute schedule, a 30-second timeout, add
 | **"FAILED" with a timeout error** | The Kibana server may be unreachable. Check your network connection and the URL. |
 | **"FAILED" with a location error** | Ensure the Private Location name exactly matches what is configured in your Kibana instance. |
 
----
-
 ## 🔒 Security Notice
 
 This script is designed with security in mind:
@@ -152,8 +138,6 @@ This script is designed with security in mind:
 *   Once the PowerShell window is closed, these credentials are forgotten.
 
 Please ensure you run this script in a trusted environment and avoid sharing your API Key in plain text.
-
----
 
 ## 🤝 Contributing
 
