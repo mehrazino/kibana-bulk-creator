@@ -9,6 +9,7 @@ Compatible with **Windows PowerShell 5.1** and **PowerShell 7+**.
 *   **Bulk Creation:** Add hundreds of ICMP monitors in seconds.
 *   **Fully Dynamic Configuration:** No hardcoded values. If the Kibana URL, API Key, or Private Location are not provided via switches, the script will securely prompt you for them.
 *   **Smart URL Handling:** Automatically fixes missing protocols (`https://`) and strips unnecessary paths if you paste a full Kibana dashboard URL.
+*   **Actionable Error Handling:** Provides clear, on-screen suggestions for HTTP errors (e.g., invalid API Key, missing permissions, or incorrect Location names).
 *   **Advanced Configuration:** Supports custom schedules, timeouts, labels, namespaces, and multiple tags.
 *   **Safe & Secure:** Credentials are kept strictly in memory. Nothing is saved to disk or sent to third-party servers.
 *   **Detailed Logging:** Displays the exact settings for each monitor before creation and reports `SUCCESS`, `SKIPPED`, or `FAILED` clearly.
@@ -80,6 +81,8 @@ Execute the script by pointing it to your list file:
 .\icmp-creator.ps1 -f .\my_targets.txt
 ```
 
+> **Tip:** If you run the script without any arguments (just `.\icmp-creator.ps1`), it will automatically display the help menu.
+
 The script will interactively prompt you for any missing information:
 *   **Kibana URL** (e.g., `https://kibana.example.com:5601`)
 *   **API Key**
@@ -124,10 +127,11 @@ This command creates monitors with a 5-minute schedule, a 30-second timeout, add
 | :--- | :--- |
 | **"Execution Policy" error** | Run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` before executing the script. |
 | **"The URI prefix is not recognized"** | Ensure the Kibana URL includes `https://`. The script attempts to fix this automatically, but double-check the input. |
-| **"FAILED" with an authorization error** | Verify that your API Key is correct and has the necessary permissions for Synthetics. |
+| **"FAILED" with HTTP 401 or 403** | The API Key is invalid, expired, or lacks required permissions. Verify the key in Kibana. |
+| **"FAILED" with HTTP 400** | Bad Request. Check if the Private Location name exactly matches what is configured in Kibana. |
+| **"FAILED" with HTTP 404** | Endpoint not found. Verify that the Kibana URL and port are correct. |
 | **"SKIPPED (Already exists)"** | A monitor with the same name already exists. The script will skip it and continue with the next one. |
-| **"FAILED" with a timeout error** | The Kibana server may be unreachable. Check your network connection and the URL. |
-| **"FAILED" with a location error** | Ensure the Private Location name exactly matches what is configured in your Kibana instance. |
+| **"FAILED" (No HTTP Code)** | Network issue. Ensure the Kibana server is reachable and running. |
 
 ## 🔒 Security Notice
 
