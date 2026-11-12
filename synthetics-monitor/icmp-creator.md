@@ -9,9 +9,9 @@ Compatible with **Windows PowerShell 5.1** and **PowerShell 7+**.
 ## ✨ Features
 
 *   **Bulk Creation:** Add hundreds of ICMP monitors in seconds.
-*   **Smart URL Handling:** Automatically fixes missing protocols and strips unnecessary paths from the Kibana URL.
-*   **Interactive Prompts:** Prompts for the URL and API Key if they are not provided via switches.
-*   **Advanced Configuration:** Supports custom schedules, timeouts, labels, namespaces, and multiple tags.
+*   **Fully Dynamic Configuration:** No hardcoded values. If the Kibana URL, API Key, or Private Location are not provided via switches, the script will securely prompt you for them.
+*   **Smart URL Handling:** Automatically fixes missing protocols (`https://`) and strips unnecessary paths if you paste a full Kibana dashboard URL.
+*   **Advanced Settings:** Supports custom schedules, timeouts, labels, namespaces, and multiple tags.
 *   **Safe & Secure:** Credentials are kept strictly in memory. Nothing is saved to disk or sent to third-party servers.
 *   **Detailed Logging:** Displays the exact settings for each monitor before creation and reports `SUCCESS`, `SKIPPED`, or `FAILED` clearly.
 
@@ -23,7 +23,7 @@ Before running the script, ensure you have:
 
 1.  **Kibana Instance:** Access to a Kibana server with **Synthetics** enabled.
 2.  **API Key:** A valid Kibana API Key with permissions to create Synthetics monitors. You can generate one from **Kibana → Stack Management → API Keys**.
-3.  **Private Location:** The name of your configured Private Location (e.g., `Coordinator`). This script uses `Coordinator` by default. You can find your locations under **Observability → Synthetics → Settings → Private Locations**.
+3.  **Private Location:** The name of your configured Private Location (e.g., `My-Datacenter`). You can find your locations under **Observability → Synthetics → Settings → Private Locations**.
 4.  **PowerShell:** Windows PowerShell 5.1 (built-in) or PowerShell 7+.
 
 ---
@@ -57,12 +57,12 @@ IP|Name|Tag1,Tag2
 **Example:**
 
 ```text
-192.168.1.10|server-01 - windows - 192.168.1.10|Windows
-192.168.1.1|core-router - cisco-ios - 192.168.1.1|CiscoRS
-192.168.1.50|fw-edge - fortigate - 192.168.1.50|Firewall,Edge
+10.0.0.1|server-alpha - windows - 10.0.0.1|Windows
+10.0.0.2|core-router - cisco-ios - 10.0.0.2|CiscoRS
+10.0.0.3|fw-edge - fortigate - 10.0.0.3|Firewall,Edge
 ```
 
-> **Note:** Tags are optional. If you do not need tags, you can leave the third part empty (e.g., `192.168.1.5|linux-server - 192.168.1.5|`).
+> **Note:** Tags are optional. If you do not need tags, you can leave the third part empty (e.g., `10.0.0.5|linux-server - 10.0.0.5|`).
 
 ### Step 2: Open PowerShell in the Script Folder
 
@@ -88,14 +88,15 @@ Execute the script by pointing it to your list file:
 .\icmp-creator.ps1 -f .\my_targets.txt
 ```
 
-The script will prompt you for:
+The script will interactively prompt you for any missing information:
 *   **Kibana URL** (e.g., `https://kibana.example.com:5601`)
 *   **API Key**
+*   **Private Location Name**
 
-You can also provide these upfront using the `-k` and `-a` switches:
+You can also provide these upfront using the `-k`, `-a`, and `-l` switches to skip the prompts:
 
 ```powershell
-.\icmp-creator.ps1 -f .\my_targets.txt -k "https://kibana.example.com:5601" -a "your-api-key-here"
+.\icmp-creator.ps1 -f .\my_targets.txt -k "https://kibana.example.com:5601" -a "your-api-key" -l "My-Datacenter"
 ```
 
 ---
@@ -107,9 +108,9 @@ The script accepts the following optional parameters to fine-tune each monitor. 
 | Switch | Description | Default |
 | :--- | :--- | :--- |
 | `-f` | **(Required)** Path to the text file containing targets. | — |
-| `-k` | Kibana URL. If omitted, you will be prompted. | (Prompt) |
-| `-a` | Kibana API Key. If omitted, you will be prompted. | (Prompt) |
-| `-l` | Name of the Private Location. | `Coordinator` |
+| `-k` | Kibana URL. | (Prompt) |
+| `-a` | Kibana API Key. | (Prompt) |
+| `-l` | Name of the Private Location. | (Prompt) |
 | `-s` | Schedule interval in minutes. Allowed: `1, 3, 5, 10, 15, 30, 60, 120, 240`. | `3` |
 | `-t` | Timeout in seconds. | `16` |
 | `-e` | Enable or disable the monitor (`true` / `false`). | `true` |
@@ -122,10 +123,10 @@ The script accepts the following optional parameters to fine-tune each monitor. 
 ### Example with Advanced Settings
 
 ```powershell
-.\icmp-creator.ps1 -f .\my_targets.txt -s 5 -t 30 -lbl "env:prod,team:network"
+.\icmp-creator.ps1 -f .\my_targets.txt -s 5 -t 30 -lbl "env:prod,team:network" -l "My-Datacenter"
 ```
 
-This command creates monitors with a 5-minute schedule, a 30-second timeout, and adds labels `env:prod` and `team:network` to each monitor.
+This command creates monitors with a 5-minute schedule, a 30-second timeout, adds labels `env:prod` and `team:network`, and assigns them to the `My-Datacenter` location.
 
 ---
 
@@ -134,10 +135,11 @@ This command creates monitors with a 5-minute schedule, a 30-second timeout, and
 | Issue | Solution |
 | :--- | :--- |
 | **"Execution Policy" error** | Run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` before executing the script. |
-| **"The URI prefix is not recognized"** | Ensure the Kibana URL includes `https://` (e.g., `https://kibana.example.com:5601`). The script attempts to fix this automatically, but double-check the input. |
+| **"The URI prefix is not recognized"** | Ensure the Kibana URL includes `https://`. The script attempts to fix this automatically, but double-check the input. |
 | **"FAILED" with an authorization error** | Verify that your API Key is correct and has the necessary permissions for Synthetics. |
 | **"SKIPPED (Already exists)"** | A monitor with the same name already exists. The script will skip it and continue with the next one. |
 | **"FAILED" with a timeout error** | The Kibana server may be unreachable. Check your network connection and the URL. |
+| **"FAILED" with a location error** | Ensure the Private Location name exactly matches what is configured in your Kibana instance. |
 
 ---
 
@@ -145,7 +147,7 @@ This command creates monitors with a 5-minute schedule, a 30-second timeout, and
 
 This script is designed with security in mind:
 
-*   The **Kibana URL** and **API Key** are used **strictly in-memory** for the current session.
+*   The **Kibana URL**, **API Key**, and **Private Location** are used **strictly in-memory** for the current session.
 *   They are **not** saved to disk, logged to any file, or sent to any third-party servers.
 *   Once the PowerShell window is closed, these credentials are forgotten.
 
