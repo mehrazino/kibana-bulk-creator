@@ -71,6 +71,9 @@ param (
 # Handle custom --help switch
 if ($args -contains '--help') { $Help = $true }
 
+# If no parameters are provided at all, show help automatically
+if ($PSBoundParameters.Count -eq 0) { $Help = $true }
+
 # Display Help
 if ($Help) {
     Write-Host "=============================================" -ForegroundColor Cyan
