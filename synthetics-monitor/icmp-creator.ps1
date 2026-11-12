@@ -17,7 +17,7 @@
     Kibana API Key (If omitted, you will be prompted).
 
 .PARAMETER l
-    Private Location Name (Default: Coordinator).
+    Private Location Name (If omitted, you will be prompted).
 
 .PARAMETER s
     Schedule interval in minutes (Default: 3).
@@ -44,17 +44,17 @@
     Show this help menu (--help also works).
 
 .EXAMPLE
-    .\CreateMonitors.ps1 -f .\List.txt
+    .\icmp-creator.ps1 -f .\List.txt
 
 .EXAMPLE
-    .\CreateMonitors.ps1 -f .\List.txt -s 5 -t 30 -lbl "env:prod,team:network"
+    .\icmp-creator.ps1 -f .\List.txt -s 5 -t 30 -lbl "env:prod,team:network"
 #>
 
 param (
     [Alias('f')] [string]$FilePath,
     [Alias('k')] [string]$KibanaUrl = "",
     [Alias('a')] [string]$ApiKey = "",
-    [Alias('l')] [string]$Location = "Coordinator",
+    [Alias('l')] [string]$Location = "",
     
     # Advanced optional parameters
     [Alias('s')] [int]$Schedule = 0,
@@ -78,7 +78,7 @@ if ($Help) {
     Write-Host "=============================================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "USAGE:" -ForegroundColor Yellow
-    Write-Host "  .\CreateMonitors.ps1 -f <path_to_txt> [-s <min>] [-t <sec>] ..."
+    Write-Host "  .\icmp-creator.ps1 -f <path_to_txt> [-s <min>] [-t <sec>] ..."
     Write-Host ""
     Write-Host "REQUIRED:" -ForegroundColor Yellow
     Write-Host "  -f   : Path to the text file containing targets."
@@ -86,7 +86,7 @@ if ($Help) {
     Write-Host "CONNECTION:" -ForegroundColor Yellow
     Write-Host "  -k   : Kibana URL (If omitted, you will be prompted)."
     Write-Host "  -a   : API Key (If omitted, you will be prompted)."
-    Write-Host "  -l   : Private Location (Default: Coordinator)."
+    Write-Host "  -l   : Private Location (If omitted, you will be prompted)."
     Write-Host ""
     Write-Host "ADVANCED SETTINGS (Optional):" -ForegroundColor Yellow
     Write-Host "  -s   : Schedule in minutes (Default: 3) [1,3,5,10,15,30,60,120,240]"
@@ -163,11 +163,21 @@ if ([string]::IsNullOrWhiteSpace($ApiKey)) {
     }
 }
 
+# Prompt for Private Location if not provided via switch
+if ([string]::IsNullOrWhiteSpace($Location)) {
+    Write-Host "Private Location not provided." -ForegroundColor Yellow
+    $Location = Read-Host "Please enter your Private Location name"
+    if ([string]::IsNullOrWhiteSpace($Location)) {
+        Write-Host "Error: Private Location is required to proceed." -ForegroundColor Red
+        exit
+    }
+}
+
 # -----------------------------------------------------------------
 # Security Notice
 # -----------------------------------------------------------------
 Write-Host "`n[SECURITY NOTICE]" -ForegroundColor Magenta
-Write-Host "The provided URL and API Key are used strictly in-memory for this session." -ForegroundColor Gray
+Write-Host "The provided URL, API Key, and Location are used strictly in-memory for this session." -ForegroundColor Gray
 Write-Host "They are NOT saved to disk, logged, or sent to any third-party servers." -ForegroundColor Gray
 Write-Host "Once this PowerShell window is closed, these credentials are forgotten." -ForegroundColor Gray
 Write-Host "---------------------------------------------------------`n" -ForegroundColor DarkGray
